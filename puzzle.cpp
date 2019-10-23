@@ -1,8 +1,11 @@
 #include <bits/stdc++.h>
-#include <algorithm>
 using namespace std;
+using namespace std::chrono;
 
 int puzzle[4][4], origin[4][4], temp[16], zero_r, zero_c, temp_r, temp_c;
+int board[16] = {4,14,1,5,9,13,11,0,2,15,7,12,3,10,6,8};
+// int board[16] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 13, 15, 0};
+// int board[16] = {1,2,3,4,0,5,6,7,8,9,10,11,12,13,14,15};
 int goal_pos1[4][4] = {{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 0}};   // parity: even
 int goal_pos2[4][4] = {{1, 2, 3, 4}, {8, 7, 6, 5}, {9, 10, 11, 12}, {0, 15, 14, 13}};   // parity: odd
 vector<char> path;
@@ -33,6 +36,7 @@ void generate_puzzle(){
     int cnt = 0;
     for(int j = 0; j < 4; ++j){
         for(int i = 0; i < 4; ++i){
+            // puzzle[j][i] = board[cnt++];
             puzzle[j][i] = temp[cnt++];
             origin[j][i] = puzzle[j][i];
         }
@@ -41,12 +45,13 @@ void generate_puzzle(){
     print_puzzle();
 } 
 
-
+// check parity
 bool check_parity(){
     bool even_parity = false;
     int f1 = 0, f2 = 0, f = 0;
     
     for(int i = 0; i < 16; ++i){
+        // int num = board[i];
         int num = temp[i];
         if(num == 0){
             temp_r = zero_r = i/4;
@@ -56,6 +61,7 @@ bool check_parity(){
         }
         int sum = 0;
         for(int j = i+1; j < 16; ++j){
+            // if(board[j] != 0 && board[j] < num)
             if(temp[j] != 0 && temp[j] < num)
                 sum++;
         }
@@ -63,7 +69,7 @@ bool check_parity(){
         f1 += sum;
     }
     f = f1 + f2;
-    // cout << "f: " << f << " " << f1 << " " << f2 << endl;
+    cout << "f: " << f << " " << f1 << " " << f2 << endl;
     if(f % 2 == 0)  even_parity = true;
     else even_parity = false;
     // cout << "parity: " << even_parity << endl;
@@ -103,7 +109,7 @@ int DFS(int g, int prev_direction, int threshold){
         // calculate the next position to move
         int next_r = zero_r + r_dir[i];
         int next_c = zero_c + c_dir[i];
-        if(next_r < 0 || next_r > 4 || next_c < 0 || next_c > 4) continue;
+        if(next_r < 0 || next_r > 3 || next_c < 0 || next_c > 3) continue;
 
         // swap position
         path.push_back(dir[i]);
@@ -116,6 +122,7 @@ int DFS(int g, int prev_direction, int threshold){
         // if return -1 then success
         if(result == -1) return -1;
         // else this move is not good, swap back
+        // fail and need to increase
         if(result < mn) mn = result;
         swap(next_r, zero_r);
         swap(next_c, zero_c);
@@ -133,10 +140,10 @@ bool IDAstar(){
     while(1){
         // DFS search
         int t = DFS(0, -1, threshold);
-        cout << "t " << t << endl;
+        cout << "threshold " << t << endl;
         if(t == -1)   return true;  // success
         // if(t == 100000000) return false;
-        if(t > 60) return false;
+        if(t > 70) return false;
         // increase depth and search again
         threshold = t;
     }
@@ -194,25 +201,30 @@ int main(){
     bool is_solvable = check_parity();
     cout << "parity: " << is_solvable << endl;
     if(!is_solvable){
-        cout << "this puzzle is not solvable\n";
+        cout << "odd parity, this puzzle is not solvable\n";
         return 0;
     }
     else{
         m_distance = H();
         // cout << "Manhatann distance: " << m_distance << endl;
         // cout << "even" << endl;
+        auto start = high_resolution_clock::now();
         bool result = IDAstar();
+        auto stop = high_resolution_clock::now();
         // too many steps
         if(!result){
             cout << "this puzzle is not solvable\n";
             return 0;
         }
         // cout << result << endl;
-        for(int i = 0; i < path.size(); ++i)
-            cout << path[i] << " ";
-        cout << endl;
+        // for(int i = 0; i < path.size(); ++i)
+        //     cout << path[i] << " ";
+        // cout << endl;
         // print the moving process
         print_move();
+
+        auto duration = duration_cast<microseconds>(stop - start);
+        cout << "Searching time: " << duration.count()/1000 << " ms" << endl;
     }
     
 
