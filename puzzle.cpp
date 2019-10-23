@@ -3,9 +3,8 @@
 using namespace std;
 
 int puzzle[4][4], origin[4][4], temp[16], zero_r, zero_c, temp_r, temp_c;
-bool even_parity = false;
-int goal_pos1[4][4] = {{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 0}};
-int goal_pos2[4][4] = {{1, 2, 3, 4}, {8, 7, 6, 5}, {9, 10, 11, 12}, {0, 15, 14, 13}};
+int goal_pos1[4][4] = {{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 0}};   // parity: even
+int goal_pos2[4][4] = {{1, 2, 3, 4}, {8, 7, 6, 5}, {9, 10, 11, 12}, {0, 15, 14, 13}};   // parity: odd
 vector<char> path;
 int r_dir[4] = {0, 0, +1, -1};
 int c_dir[4] = {+1, -1, 0, 0};
@@ -43,7 +42,8 @@ void generate_puzzle(){
 } 
 
 
-int check_parity(){
+bool check_parity(){
+    bool even_parity = false;
     int f1 = 0, f2 = 0, f = 0;
     
     for(int i = 0; i < 16; ++i){
@@ -67,6 +67,7 @@ int check_parity(){
     if(f % 2 == 0)  even_parity = true;
     else even_parity = false;
     // cout << "parity: " << even_parity << endl;
+    return even_parity;
 }
 
 // H function, calculate Manhattan distance
@@ -88,7 +89,6 @@ int H(){
 }
 
 int DFS(int g, int prev_direction, int threshold){
-    // cout << "g prev thr " << g << " " << prev_direction << " " << threshold << endl;
     // update h
     int h = H();
     if(h == 0)  return -1;   // found
@@ -133,9 +133,9 @@ bool IDAstar(){
     while(1){
         // DFS search
         int t = DFS(0, -1, threshold);
-        // cout << "t " << t << endl;
+        cout << "t " << t << endl;
         if(t == -1)   return true;  // success
-        if(t == 100000000) return false;
+        // if(t == 100000000) return false;
         if(t > 60) return false;
         // increase depth and search again
         threshold = t;
@@ -183,27 +183,24 @@ void print_move(){
                 cout << setw(3) << origin[j][i];
             cout << endl;
         }
-
     }
-
 }
 
 int main(){
     int m_distance = 0;
     cout << "Random puzzle:\n";
     generate_puzzle();
-    check_parity();
 
-    m_distance = H();
-    // cout << "Manhatann distance: " << m_distance << endl;
-    // odd
-    if(!even_parity){
+    bool is_solvable = check_parity();
+    cout << "parity: " << is_solvable << endl;
+    if(!is_solvable){
         cout << "this puzzle is not solvable\n";
         return 0;
     }
-    // even
-    else {
-        cout << "even" << endl;
+    else{
+        m_distance = H();
+        // cout << "Manhatann distance: " << m_distance << endl;
+        // cout << "even" << endl;
         bool result = IDAstar();
         // too many steps
         if(!result){
